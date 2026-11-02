@@ -245,9 +245,15 @@ class EndToEndTests(unittest.TestCase):
     def setUp(self):
         self.root = tempfile.mkdtemp()
         self.addCleanup(remove_tree, self.root)
-        # Ignore the git settings of the computer the tests run on.
+        # Ignore the git settings of the computer the tests run on. Also
+        # turn off automatic housekeeping: after a push, git can start it in
+        # the background, and it keeps writing to the test repositories
+        # while they are being deleted.
         config = os.path.join(self.root, 'gitconfig')
-        open(config, 'w').close()
+        with open(config, 'w') as file:
+            file.write('[gc]\n\tauto = 0\n'
+                       '[maintenance]\n\tauto = false\n'
+                       '[receive]\n\tautogc = false\n')
         environment = mock.patch.dict(os.environ, {
             'GIT_CONFIG_GLOBAL': config,
             'GIT_CONFIG_NOSYSTEM': '1',
